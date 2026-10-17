@@ -131,3 +131,9 @@ tbody tr{cursor:pointer}tbody tr:hover td{background:var(--sf)}
 .perm{width:100%;font-size:13px}.perm td,.perm th{padding:8px;text-align:center}.perm td:first-child,.perm th:first-child{text-align:left}
 .demo-hint{font-size:13px;color:var(--mut);background:var(--sf);border:1px dashed var(--line);border-radius:14px;padding:10px 12px}
 @media(max-width:520px){.md .two{grid-template-columns:1fr}}
+.demo-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.demo-list button{padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--solid);font-size:12px}
+.demo-list button span{color:var(--mut)}
+.demo-list button:hover{border-color:var(--acc)}
+.banner{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 18px;margin-bottom:16px;border-radius:18px;background:#e5484d1a;border:1px solid #e5484d55}
+.loading{display:grid;place-items:center;min-height:50vh;color:var(--mut)}

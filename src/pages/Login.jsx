@@ -1,16 +1,21 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { DEMO_PASSWORD, USERS } from '../data/seed';
+import { DEMO_ACCOUNTS } from '../data/constants';
 
 export default function Login() {
   const { login, toast } = useApp();
-  const [who, setWho] = useState(USERS[0].id);
-  const [pw, setPw] = useState(DEMO_PASSWORD);
+  const [userName, setUserName] = useState('');
+  const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    const error = login(who, pw);
+    if (!userName.trim() || !pw) return setErr('Enter your username and password.');
+    setBusy(true);
+    setErr('');
+    const error = await login(userName, pw);
+    setBusy(false);
     if (error) setErr(error);
   };
 
@@ -28,29 +33,46 @@ export default function Login() {
           <b>T</b>Taskflow
         </div>
         <h1>Welcome back</h1>
-        <p className="muted">Pick a team member to see their role-based view.</p>
+        <p className="muted">Sign in with your CRM account. What you see depends on your role.</p>
         <label>
-          Account
-          <select value={who} onChange={(e) => setWho(Number(e.target.value))}>
-            {USERS.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name} — {u.role}
-              </option>
-            ))}
-          </select>
+          Username
+          <input value={userName} onChange={(e) => setUserName(e.target.value)} autoComplete="username" autoFocus />
         </label>
         <label>
           Password
           <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="current-password" />
         </label>
         <div className="err">{err}</div>
-        <button className="btn y" style={{ justifyContent: 'center' }}>
-          Sign in
+        <button className="btn y" style={{ justifyContent: 'center' }} disabled={busy}>
+          {busy ? 'Signing in…' : 'Sign in'}
         </button>
-        <button type="button" className="btn g" style={{ justifyContent: 'center' }} onClick={() => toast('Reset link sent', 'Demo only: no email is sent.')}>
+        <button
+          type="button"
+          className="btn g"
+          style={{ justifyContent: 'center' }}
+          onClick={() => toast('Password reset', 'Ask your CRM administrator to reset it in SugarCRM (Admin > User Management).')}
+        >
           Forgot password
         </button>
-        <p className="demo-hint">Demo mode: every account uses the password <b>demo1234</b>. Real authentication will come from the backend.</p>
+        <div className="demo-hint">
+          Demo accounts (password <b>demo1234</b>):
+          <div className="demo-list">
+            {DEMO_ACCOUNTS.map(([u, label]) => (
+              <button
+                type="button"
+                key={u}
+                onClick={() => {
+                  setUserName(u);
+                  setPw('demo1234');
+                  setErr('');
+                }}
+                title={label}
+              >
+                <b>{u}</b> <span>{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </form>
     </div>
   );

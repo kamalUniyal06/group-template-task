@@ -1,10 +1,10 @@
-import { STATUS } from '../data/seed';
-import { findUser, isLate } from '../data/permissions';
+import { STATUS } from '../data/constants';
+import { isLate } from '../data/permissions';
 import { useApp } from '../context/AppContext';
 import Avatar from './Avatar';
 
 export default function TaskCard({ task, onOpen }) {
-  const { moveTask } = useApp();
+  const { moveTask, userById } = useApp();
   const late = isLate(task);
   return (
     <div
@@ -17,13 +17,13 @@ export default function TaskCard({ task, onOpen }) {
       onDragEnd={(e) => e.currentTarget.classList.remove('drag')}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <small className="muted">{task.id}</small>
+        <small className="muted">{task.key}</small>
         <span className={'pill p-' + task.priority}>{task.priority}</span>
       </div>
       <b onClick={() => onOpen(task.id)}>{task.title}</b>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
         <span className="avs">
-          <Avatar user={findUser(task.assignee)} />
+          <Avatar user={userById(task.assignee)} />
         </span>
         <small style={late ? { color: '#e5484d', fontWeight: 600 } : { color: 'var(--mut)' }}>
           {task.comments?.length ? `💬 ${task.comments.length} · ` : ''}

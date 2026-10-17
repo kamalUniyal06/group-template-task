@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { THEMES } from '../data/seed';
+import { THEMES } from '../data/constants';
 import Avatar from './Avatar';
 import Icon from './Icon';
 import { ago } from '../utils/time';
@@ -58,7 +58,7 @@ export default function Header({ query, setQuery, onMenu }) {
           </div>
           {notes.length === 0 && <p className="muted" style={{ padding: 8 }}>You're all caught up.</p>}
           {notes.slice(0, 6).map((n) => {
-            const read = n.readBy.includes(me.id);
+            const read = n.read;
             return (
               <div key={n.id} className={'note-row' + (read ? ' read' : '')} style={{ padding: '10px 8px', cursor: 'pointer' }} onClick={() => markRead(n.id)}>
                 <span className="ndot" />

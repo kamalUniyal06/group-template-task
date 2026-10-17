@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { STATUS } from '../data/seed';
-import { canDeleteTask, canEditTask, canReviewTask, findUser, isLate } from '../data/permissions';
+import { STATUS } from '../data/constants';
+import { canDeleteTask, canEditTask, canReviewTask, isLate } from '../data/permissions';
 import { ago } from '../utils/time';
 import Avatar from './Avatar';
 import Modal from './Modal';
 
 export default function TaskDetail({ id, onClose, onEdit }) {
-  const { me, tasks, moveTask, deleteTask, addComment } = useApp();
+  const { me, tasks, moveTask, deleteTask, addComment, userById } = useApp();
   const [text, setText] = useState('');
   const [confirm, setConfirm] = useState(false);
   const t = tasks.find((x) => x.id === id);
   if (!t) return null;
 
-  const owner = findUser(t.assignee);
-  const creator = findUser(t.createdBy);
+  const owner = userById(t.assignee);
+  const creator = userById(t.createdBy);
   const reviewer = canReviewTask(me, t);
   const editable = canEditTask(me, t);
 
@@ -28,7 +28,7 @@ export default function TaskDetail({ id, onClose, onEdit }) {
   return (
     <Modal title={t.title} onClose={onClose} wide>
       <div className="meta">
-        <small className="muted">{t.id}</small>
+        <small className="muted">{t.key}</small>
         <span className={'pill p-' + t.priority}>{t.priority}</span>
         <span className="pill">{STATUS[t.status]}</span>
         <span className="pill">{t.dept}</span>
@@ -83,7 +83,7 @@ export default function TaskDetail({ id, onClose, onEdit }) {
       {(t.comments || []).map((c) => (
         <div key={c.id} className="cmt">
           <small>
-            {findUser(c.by).name} · {ago(c.at)}
+            {userById(c.by).name} · {ago(c.at)}
           </small>
           <div>{c.text}</div>
         </div>

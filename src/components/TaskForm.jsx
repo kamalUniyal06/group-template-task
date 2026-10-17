@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { PRIORITIES, day } from '../data/seed';
-import { assignableUsers, findUser } from '../data/permissions';
+import { PRIORITIES, day } from '../data/constants';
+import { assignableUsers } from '../data/permissions';
 import Modal from './Modal';
 
 export default function TaskForm({ task, onClose }) {
-  const { me, createTask, updateTask } = useApp();
-  const users = assignableUsers(me);
+  const { me, users: allUsers, createTask, updateTask, userById } = useApp();
+  const users = assignableUsers(me, allUsers);
+  const [saving, setSaving] = useState(false);
   const [f, setF] = useState(
     task
       ? { title: task.title, description: task.description, assignee: task.assignee, priority: task.priority, due: task.due, hours: task.hours }
@@ -15,19 +16,21 @@ export default function TaskForm({ task, onClose }) {
   const [err, setErr] = useState('');
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     const title = f.title.trim();
     if (title.length < 3) return setErr('Title must be at least 3 characters.');
     if (!f.due) return setErr('Pick a due date.');
-    const data = { ...f, title, assignee: Number(f.assignee), hours: Number(f.hours) || 1 };
-    if (task) updateTask(task.id, data);
-    else createTask(data);
+    const data = { ...f, title, hours: Number(f.hours) || 1 };
+    setSaving(true);
+    if (task) await updateTask(task.id, data);
+    else await createTask(data);
+    setSaving(false);
     onClose();
   };
 
   // Keep the current assignee selectable even if the editor could not normally assign to them.
-  const options = task && !users.some((u) => u.id === task.assignee) ? [...users, findUser(task.assignee)] : users;
+  const options = task && !users.some((u) => u.id === task.assignee) ? [...users, userById(task.assignee)] : users;
 
   return (
     <Modal title={task ? 'Edit task' : 'New task'} onClose={onClose} wide>
@@ -46,7 +49,7 @@ export default function TaskForm({ task, onClose }) {
             <select value={f.assignee} onChange={set('assignee')}>
               {options.map((u) => (
                 <option key={u.id} value={u.id}>
-                  {u.name} — {u.role}
+                  {u.name} — {u.role}{u.dept ? ` · ${u.dept}` : ""}
                 </option>
               ))}
             </select>
@@ -73,7 +76,7 @@ export default function TaskForm({ task, onClose }) {
           <button type="button" className="btn g" onClick={onClose}>
             Cancel
           </button>
-          <button className="btn y">{task ? 'Save changes' : 'Create task'}</button>
+          <button className="btn y" disabled={saving}>{saving ? 'Saving…' : task ? 'Save changes' : 'Create task'}</button>
         </div>
       </form>
     </Modal>

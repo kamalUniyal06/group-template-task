@@ -2,10 +2,15 @@ import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { ago } from '../utils/time';
 
-export default function Notifications() {
-  const { me, notes, unread, markRead, markAllRead, notify, resetDemo } = useApp();
+export default function Notifications({ onOpen }) {
+  const { notes, tasks, unread, markRead, markAllRead, notify, reload } = useApp();
   const [filter, setFilter] = useState('all');
-  const list = filter === 'unread' ? notes.filter((n) => !n.readBy.includes(me.id)) : notes;
+  const list = filter === 'unread' ? notes.filter((n) => !n.read) : notes;
+
+  const open = (n) => {
+    if (!n.read) markRead(n.id);
+    if (n.taskId && tasks.some((t) => t.id === n.taskId)) onOpen(n.taskId);
+  };
 
   return (
     <>
@@ -21,39 +26,41 @@ export default function Notifications() {
         </div>
       </div>
       <div className="glass card">
-        {list.map((n) => {
-          const read = n.readBy.includes(me.id);
-          return (
-            <div key={n.id} className={'note-row' + (read ? ' read' : '')}>
-              <span className="ndot" />
-              <div>
-                <b>{n.title}</b>
-                <br />
-                <small className="muted">{n.msg}</small>
-                <br />
-                <small className="muted">{ago(n.at)}</small>
-              </div>
-              {!read && (
-                <button className="btn g" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => markRead(n.id)}>
-                  Mark read
-                </button>
-              )}
+        {list.map((n) => (
+          <div key={n.id} className={'note-row' + (n.read ? ' read' : '')} style={{ cursor: n.taskId ? 'pointer' : 'default' }} onClick={() => open(n)}>
+            <span className="ndot" />
+            <div>
+              <b>{n.title}</b>
+              <br />
+              <small className="muted">{n.msg}</small>
+              <br />
+              <small className="muted">{ago(n.at)}</small>
             </div>
-          );
-        })}
+            {!n.read && (
+              <button
+                className="btn g"
+                style={{ padding: '6px 12px', fontSize: 13 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  markRead(n.id);
+                }}
+              >
+                Mark read
+              </button>
+            )}
+          </div>
+        ))}
         {!list.length && <p className="muted">Nothing here. You're all caught up.</p>}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
           <button className="btn g" onClick={markAllRead}>
             Mark all read
           </button>
-          <button className="btn g" onClick={() => notify('Deadline tomorrow', 'Brand refresh moodboard is due in 24 hours.', [me.id])}>
+          <button className="btn g" onClick={() => notify('Test notification', 'Notifications are stored in SugarCRM (Task Notifications module).')}>
             Send test notification
           </button>
-          {me.role === 'Company Head' && (
-            <button className="btn g" onClick={resetDemo}>
-              Reset demo data
-            </button>
-          )}
+          <button className="btn g" onClick={reload}>
+            Refresh
+          </button>
         </div>
       </div>
     </>

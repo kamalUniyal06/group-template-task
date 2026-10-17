@@ -1,5 +1,4 @@
 import { useApp } from '../context/AppContext';
-import { USERS } from '../data/seed';
 import { isLate } from '../data/permissions';
 import Avatar from '../components/Avatar';
 import CountUp from '../components/CountUp';
@@ -23,7 +22,7 @@ const weekly = (tasks) => {
 };
 
 export default function Dashboard({ onNew, onOpen }) {
-  const { me, visible: T } = useApp();
+  const { me, users, visible: T } = useApp();
   const mine = T.filter((t) => t.assignee === me.id);
   const open = mine.filter((t) => t.status !== 'done');
   const done = T.filter((t) => t.status === 'done').length;
@@ -31,7 +30,7 @@ export default function Dashboard({ onNew, onOpen }) {
   const cnt = (s) => T.filter((t) => t.status === s).length;
   const overdue = T.filter(isLate).length;
   const pr = ['urgent', 'high', 'medium', 'low'].map((p) => T.filter((t) => t.priority === p).length);
-  const wl = USERS.filter((u) => T.some((t) => t.assignee === u.id)).map((u) => [u, T.filter((t) => t.assignee === u.id && t.status !== 'done').length]);
+  const wl = users.filter((u) => T.some((t) => t.assignee === u.id)).map((u) => [u, T.filter((t) => t.assignee === u.id && t.status !== 'done').length]);
   const mx = Math.max(1, ...wl.map((w) => w[1]));
   const wk = weekly(T);
   const wkMax = Math.max(1, ...wk);

@@ -1,23 +1,22 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { ROLES, USERS } from '../data/seed';
-import { PERMISSIONS } from '../data/permissions';
+import { PERMISSION_LABELS } from '../data/permissions';
 import Avatar from '../components/Avatar';
 import Modal from '../components/Modal';
 
 export default function Teams() {
-  const { me, tasks, notify } = useApp();
+  const { me, users, roles, depts, tasks, notify } = useApp();
   const [invite, setInvite] = useState(false);
   const [email, setEmail] = useState('');
   const [err, setErr] = useState('');
-  const depts = [...new Set(USERS.map((u) => u.dept).filter((d) => d !== 'All'))];
-  const canInvite = ['Company Head', 'Manager', 'Team Leader'].includes(me.role);
+  const canInvite = me.perm.can_assign_any || me.perm.can_assign_team;
+  const openCount = (id) => tasks.filter((t) => t.assignee === id && t.status !== 'done').length;
 
-  const send = (e) => {
+  const send = async (e) => {
     e.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(email)) return setErr('Enter a valid email address.');
-    notify('Invite sent', `${email} was invited by ${me.name}.`, [me.id]);
     setInvite(false);
+    await notify('Invite noted', `Ask a CRM admin to create a user for ${email} and set their Taskflow role and department.`);
     setEmail('');
     setErr('');
   };
@@ -29,10 +28,10 @@ export default function Teams() {
         <div style={{ position: 'relative' }}>
           <h1>Your teams</h1>
           <p className="muted" style={{ margin: '6px 0 12px' }}>
-            {USERS.length} people across {depts.length} departments.
+            {users.length} people across {depts.length} departments.
           </p>
           <span className="avs">
-            {USERS.slice(0, 7).map((u) => (
+            {users.slice(0, 7).map((u) => (
               <Avatar key={u.id} user={u} />
             ))}
           </span>
@@ -47,45 +46,57 @@ export default function Teams() {
       </section>
 
       <div className="grid g2">
-        {depts.map((d) => (
-          <div className="glass card" key={d}>
-            <h3>{d}</h3>
-            {USERS.filter((u) => u.dept === d)
-              .sort((a, b) => ROLES.indexOf(a.role) - ROLES.indexOf(b.role))
-              .map((u) => (
+        {depts.map((d) => {
+          const members = users.filter((u) => u.deptId === d.id).sort((a, b) => a.level - b.level);
+          return (
+            <div className="glass card" key={d.id}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 12, height: 12, borderRadius: 4, background: d.color, display: 'inline-block' }} />
+                {d.name}
+              </h3>
+              {d.description && <p className="muted" style={{ fontSize: 13, marginBottom: 10 }}>{d.description}</p>}
+              {members.map((u) => (
                 <div className="mem" key={u.id}>
                   <Avatar user={u} />
                   <div style={{ flex: 1 }}>
                     <b>{u.name}</b>
                     <br />
-                    <small className="muted">{u.role}</small>
+                    <small className="muted">
+                      {u.role}
+                      {u.email ? ` · ${u.email}` : ''}
+                    </small>
                   </div>
-                  <span className="pill">{tasks.filter((t) => t.assignee === u.id && t.status !== 'done').length} open</span>
+                  <span className="pill">{openCount(u.id)} open</span>
                 </div>
               ))}
-          </div>
-        ))}
+              {!members.length && <p className="muted">No members yet.</p>}
+            </div>
+          );
+        })}
       </div>
 
       <div className="glass card tw" style={{ marginTop: 16 }}>
         <h3>Role permissions</h3>
+        <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
+          Managed in SugarCRM under Task Roles. Changes apply the next time people sign in.
+        </p>
         <table className="perm">
           <thead>
             <tr>
               <th>Permission</th>
-              {ROLES.map((r) => (
-                <th key={r} style={r === me.role ? { color: 'var(--ink)' } : undefined}>
-                  {r}
+              {roles.map((r) => (
+                <th key={r.id} style={r.id === me.roleId ? { color: 'var(--ink)' } : undefined}>
+                  {r.name}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {PERMISSIONS.map(([label, roles]) => (
-              <tr key={label}>
+            {PERMISSION_LABELS.map(([flag, label]) => (
+              <tr key={flag}>
                 <td>{label}</td>
-                {ROLES.map((r) => (
-                  <td key={r}>{roles.includes(r) ? '✓' : '—'}</td>
+                {roles.map((r) => (
+                  <td key={r.id}>{r[flag] ? '✓' : '—'}</td>
                 ))}
               </tr>
             ))}

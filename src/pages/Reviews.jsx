@@ -1,9 +1,9 @@
 import { useApp } from '../context/AppContext';
-import { canReviewTask, findUser } from '../data/permissions';
+import { canReviewTask } from '../data/permissions';
 import Avatar from '../components/Avatar';
 
 export default function Reviews({ onOpen }) {
-  const { me, visible, moveTask } = useApp();
+  const { me, visible, moveTask, userById } = useApp();
   const R = visible.filter((t) => t.status === 'review');
 
   if (!R.length)
@@ -28,7 +28,7 @@ export default function Reviews({ onOpen }) {
       </div>
       <div className="glass card">
         {R.map((t) => {
-          const u = findUser(t.assignee);
+          const u = userById(t.assignee);
           return (
             <div className="row" key={t.id} style={{ flexWrap: 'wrap' }}>
               <Avatar user={u} />

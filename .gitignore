@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# SugarCRM package build output (the zip is kept for Module Loader uploads)
+backend/sugarcrm/dist/taskflow_package/
+# Local env
+.env.local

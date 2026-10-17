@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { PRIORITIES, STATUS, USERS } from '../data/seed';
-import { findUser, isLate, isReviewer } from '../data/permissions';
+import { PRIORITIES, STATUS } from '../data/constants';
+import { isLate } from '../data/permissions';
 import TaskCard from '../components/TaskCard';
 
 const COLUMNS = [
@@ -13,15 +13,17 @@ const COLUMNS = [
 ];
 const PRIORITY_RANK = { urgent: 0, high: 1, medium: 2, low: 3 };
 
-const sortValue = (t, key) => {
-  if (key === 'assignee') return findUser(t.assignee).name;
+const sortValue = (t, key, nameOf) => {
+  if (key === 'number') return t.number;
+  if (key === 'assignee') return nameOf(t.assignee);
   if (key === 'priority') return PRIORITY_RANK[t.priority];
   if (key === 'status') return Object.keys(STATUS).indexOf(t.status);
   return t[key];
 };
 
 export default function Tasks({ query, onNew, onOpen }) {
-  const { me, visible, moveTask } = useApp();
+  const { me, users, visible, moveTask, userById } = useApp();
+  const nameOf = (id) => userById(id).name;
   const [tab, setTab] = useState('board');
   const [sort, setSort] = useState({ key: 'due', dir: 1 });
   const [prio, setPrio] = useState('');
@@ -31,15 +33,15 @@ export default function Tasks({ query, onNew, onOpen }) {
   const q = query.toLowerCase();
   const T = visible.filter(
     (t) =>
-      (!q || (t.title + t.dept + t.id + findUser(t.assignee).name).toLowerCase().includes(q)) &&
+      (!q || (t.title + t.dept + t.key + nameOf(t.assignee)).toLowerCase().includes(q)) &&
       (!prio || t.priority === prio) &&
-      (!owner || t.assignee === Number(owner)),
+      (!owner || t.assignee === owner),
   );
-  const owners = USERS.filter((u) => visible.some((t) => t.assignee === u.id));
+  const owners = users.filter((u) => visible.some((t) => t.assignee === u.id));
 
   const sorted = [...T].sort((a, b) => {
-    const x = sortValue(a, sort.key);
-    const y = sortValue(b, sort.key);
+    const x = sortValue(a, sort.key, nameOf);
+    const y = sortValue(b, sort.key, nameOf);
     return (x > y ? 1 : x < y ? -1 : 0) * sort.dir;
   });
 
@@ -48,7 +50,7 @@ export default function Tasks({ query, onNew, onOpen }) {
   return (
     <>
       <div className="toolbar">
-        <h1>{isReviewer(me) ? 'All tasks' : 'My tasks'}</h1>
+        <h1>{me.perm.can_view_all ? 'All tasks' : me.perm.can_view_team ? me.dept + ' tasks' : 'My tasks'}</h1>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <div className="tabs" style={{ margin: 0 }}>
             <button className={tab === 'board' ? 'on' : ''} onClick={() => setTab('board')}>
@@ -135,10 +137,10 @@ export default function Tasks({ query, onNew, onOpen }) {
                     <b>{t.title}</b>
                     <br />
                     <small>
-                      {t.id} · {t.dept}
+                      {t.key} · {t.dept}
                     </small>
                   </td>
-                  <td>{findUser(t.assignee).name}</td>
+                  <td>{nameOf(t.assignee)}</td>
                   <td>
                     <span className={'pill p-' + t.priority}>{t.priority}</span>
                   </td>

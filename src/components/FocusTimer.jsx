@@ -5,7 +5,7 @@ const LEN = 25 * 60;
 const fmt = (s) => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
 
 export default function FocusTimer({ tasks }) {
-  const { notify, me } = useApp();
+  const { notify } = useApp();
   const [left, setLeft] = useState(LEN);
   const [run, setRun] = useState(false);
   const [taskId, setTaskId] = useState('');
@@ -22,8 +22,8 @@ export default function FocusTimer({ tasks }) {
     setRun(false);
     setLeft(LEN);
     const t = tasks.find((x) => x.id === taskId);
-    notify('Focus session complete', `25 minutes logged${t ? ' on ' + t.title : ''}. Take a short break.`, [me.id]);
-  }, [left, run, tasks, taskId, notify, me.id]);
+    notify('Focus session complete', `25 minutes logged${t ? ' on ' + t.title : ''}. Take a short break.`);
+  }, [left, run, tasks, taskId, notify]);
 
   const toggle = () => {
     if (!run && ring.current) {

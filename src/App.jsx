@@ -21,7 +21,7 @@ const readHash = () => {
 };
 
 export default function App() {
-  const { me } = useApp();
+  const { me, loading, error, reload, users } = useApp();
   const [view, setView] = useState(readHash);
   const [query, setQuery] = useState('');
   const [menu, setMenu] = useState(false);
@@ -61,7 +61,17 @@ export default function App() {
         <main>
           <Header query={query} setQuery={search} onMenu={() => setMenu(!menu)} />
           <div className="pg" key={view}>
-            <Page query={query} onNew={() => setForm({})} onOpen={setOpenId} />
+            {error && (
+              <div className="banner">
+                <span>
+                  <b>Could not load data from SugarCRM.</b> {error}
+                </span>
+                <button className="btn g" onClick={reload}>
+                  Retry
+                </button>
+              </div>
+            )}
+            {loading && !users.length ? <div className="loading">Loading your workspace…</div> : <Page query={query} onNew={() => setForm({})} onOpen={setOpenId} />}
           </div>
         </main>
       </div>
