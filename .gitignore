@@ -27,3 +27,6 @@ dist-ssr
 backend/sugarcrm/dist/taskflow_package/
 # Local env
 .env.local
+!backend/sugarcrm/dist/
+backend/sugarcrm/dist/*
+!backend/sugarcrm/dist/taskflow_package.zip
